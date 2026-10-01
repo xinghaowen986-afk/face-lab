@@ -250,9 +250,13 @@ async function analyze() {
   setBusy(true);
   ui.reportBadge.textContent = '正在分析';
   try {
-    await initAnalyzer(message => { if (thisRevision === revision) status(message); });
-    if (thisRevision !== revision) return;
-    status('正在分析五官关键点、清晰度与光线…');
+    if (computeMode === 'device') {
+      await initAnalyzer(message => { if (thisRevision === revision) status(message); });
+      if (thisRevision !== revision) return;
+      status('正在分析五官关键点、清晰度与光线…');
+    } else {
+      status('正在准备发送到已授权的主机电脑…');
+    }
     await nextPaint();
     if (thisRevision !== revision) return;
     let value;
@@ -260,7 +264,7 @@ async function analyze() {
     else value = await analyzePhoto(source);
     if (thisRevision !== revision) return;
     showResult(value);
-    status('测评完成 · 照片未离开你的设备');
+    status(computeMode === 'host' ? '测评完成 · 主机已返回结果' : '测评完成 · 照片未离开你的设备');
     if (matchMedia('(max-width: 820px)').matches) ui.resultPanel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
   } catch (error) {
     if (thisRevision === revision) {

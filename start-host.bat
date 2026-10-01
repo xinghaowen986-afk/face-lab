@@ -1,6 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
+set /p FACE_LAB_ACCESS_CODE=Enter a temporary visitor access code (leave blank for no code): 
 where node >nul 2>nul
 if not errorlevel 1 (
   node "%~dp0host-service.mjs"

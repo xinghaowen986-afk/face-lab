@@ -80,7 +80,7 @@ function readBody(req, maxBytes) {
     const onEnd = () => finish(null, Buffer.concat(chunks, size));
     const onAbort = () => finish(Object.assign(new Error('Client disconnected'), { code: 'ABORTED' }));
     const onError = (error) => finish(error);
-    const timer = setTimeout(() => finish(Object.assign(new Error('Body timeout'), { code: 'BODY_TIMEOUT' })), 10_000);
+    const timer = setTimeout(() => finish(Object.assign(new Error('Body timeout'), { code: 'BODY_TIMEOUT' })), 60_000);
     req.on('data', onData); req.on('end', onEnd); req.on('aborted', onAbort); req.on('error', onError);
   });
 }
@@ -298,7 +298,7 @@ export async function createHostService(options = {}) {
     return pathname?.startsWith('/internal/') ? handleInternal(req, res, pathname) : handleStatic(req, res, pathname);
   }));
   publicServer = http.createServer(wrap(handlePublic));
-  for (const server of [internalServer, publicServer]) { server.requestTimeout = 12_000; server.headersTimeout = 10_000; server.keepAliveTimeout = 1000; server.maxHeadersCount = 50; }
+  for (const server of [internalServer, publicServer]) { server.requestTimeout = 70_000; server.headersTimeout = 20_000; server.keepAliveTimeout = 1000; server.maxHeadersCount = 50; }
   const listen = (server, port) => new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, '127.0.0.1', () => { server.off('error', reject); resolve(); });

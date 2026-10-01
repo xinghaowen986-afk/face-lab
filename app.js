@@ -427,3 +427,4 @@ for (const button of document.querySelectorAll('[data-close]')) button.addEventL
 for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { if (event.target === dialog) { const box = dialog.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close(); } });
 if (location.protocol === 'file:') status('请双击 start.bat 启动程序；直接打开 HTML 无法加载本地人脸模型。', true);
 setupComputeModes();
+

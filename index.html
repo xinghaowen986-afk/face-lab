@@ -35,7 +35,7 @@
   <div class="page">
     <header class="topbar">
       <a href="./" class="wordmark">面值 <span>FACE VALUE</span></a>
-      <div class="topbar-right"><span class="local-pill"><span></span>照片仅在本机处理</span><button class="text-button" data-open="methodDialog">评分说明 <span>↗</span></button></div>
+      <div class="topbar-right"><span class="local-pill"><span></span><span id="processingLocation">照片仅在本机处理</span></span><button class="text-button" data-open="methodDialog">评分说明 <span>↗</span></button></div>
     </header>
     <main>
       <section class="intro">
@@ -60,6 +60,11 @@
             </div>
             <p class="compute-hint" id="computeHint"><svg><use href="#i-lock"/></svg> 默认使用你的设备。主机模式需要主机电脑运行 HTTPS 服务并完成短期配对。</p>
           </fieldset>
+          <div class="host-consent" id="hostConsentArea" hidden>
+            <label class="consent-row"><input type="checkbox" id="hostConsent">我同意把这张照片发送到站点主人的电脑进行分析。</label>
+            <div id="hostAccessCodeWrap" hidden><label for="hostAccessCode">主机访问码</label><input type="password" id="hostAccessCode" maxlength="128" autocomplete="off" placeholder="由站点主人提供，仅保留在当前页面"></div>
+            <button class="text-button" id="refreshHostButton" type="button">刷新主机状态 ↻</button>
+          </div>
           <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
           <div class="photo-stage" id="dropZone">
             <button class="empty-upload" id="uploadTrigger" type="button">
@@ -92,13 +97,14 @@
         </section>
       </div>
 
-      <section class="benefits" aria-label="产品特点"><div><span class="benefit-icon"><svg><use href="#i-lock"/></svg></span><p><strong>照片留在你的设备</strong><span>本地分析，刷新后即清除</span></p></div><div><span class="benefit-icon"><svg><use href="#i-scan"/></svg></span><p><strong>多个维度，认识优势</strong><span>从画面到五官，了解上镜表现</span></p></div><div><span class="benefit-icon"><svg><use href="#i-spark"/></svg></span><p><strong>让改变简单一点</strong><span>实用拍照建议，找到你的角度</span></p></div></section>
+      <section class="benefits" aria-label="产品特点"><div><span class="benefit-icon"><svg><use href="#i-lock"/></svg></span><p><strong>由你选择分析位置</strong><span>本机免上传，主机需主动同意</span></p></div><div><span class="benefit-icon"><svg><use href="#i-scan"/></svg></span><p><strong>多个维度，认识优势</strong><span>从画面到五官，了解上镜表现</span></p></div><div><span class="benefit-icon"><svg><use href="#i-spark"/></svg></span><p><strong>让改变简单一点</strong><span>实用拍照建议，找到你的角度</span></p></div></section>
       <footer><span>面值 FACE VALUE <span class="footer-dot">·</span> 每一种风格，都有光。</span><button class="text-button" data-open="privacyDialog">隐私说明 <span>↗</span></button></footer>
     </main>
   </div>
 
-  <dialog id="methodDialog"><div class="dialog-heading"><span class="eyebrow">HOW IT WORKS</span><button class="icon-button" data-close aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>这个分数，从哪里来？</h2><p>本工具用 MediaPipe 在本机检测人脸关键点，再按固定规则生成一个 0–100 的娱乐分。它不是经过人类审美训练的颜值模型，也没有人群排名。</p><div class="method-rows"><div><strong>画面对称</strong><span>35%</span><p>左右五官关键点相对面部中线的差异。转头、表情、镜头畸变都会影响结果。</p></div><div><strong>五官比例</strong><span>25%</span><p>照片中眼、鼻、嘴的位置与预设几何模板的接近程度。模板是人为规则，不是“理想长相”。</p></div><div><strong>照片清晰</strong><span>20%</span><p>面部区域的图像边缘细节；清晰度受分辨率、纹理和锐化影响。</p></div><div><strong>光线表现</strong><span>20%</span><p>曝光、亮暗剪切与左右受光差异。肤色和场景也会影响这些像素指标。</p></div></div><p class="dialog-note">总分 = 各项分数 × 对应权重后相加。针对男生拍照场景设计，不会识别或核验性别，也不推断性格、健康或身份。同一照片的结果固定，换一张照片分数可能不同。</p><button class="primary-button" data-close>了解了</button></dialog>
-  <dialog id="privacyDialog"><div class="dialog-heading"><span class="eyebrow">PRIVATE BY DESIGN</span><button class="icon-button" data-close aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>你可以选择照片在哪里分析。</h2><p>“我的设备”模式是默认模式：人脸模型在你的浏览器中运行，照片不发送到网络。</p><p>“主机电脑”模式只有在主机服务配置并完成短期配对后才会启用。选择它会把照片通过 HTTPS 发送到已授权的主机电脑；主机服务应只在内存中处理并在返回结果后清除照片。主机离线时可以随时切回本机模式。</p><p>刷新页面或点击“移除照片”会清除当前页面中的照片与结果。主动点击“保存测评报告”时，会在你的设备上下载一份含照片的 PNG 文件。</p><p>建议使用自己的照片，或已获得本人许可的照片。示例图片的来源见程序中的 assets/README.md。</p><button class="primary-button" data-close>知道了</button></dialog>
+  <dialog id="methodDialog"><div class="dialog-heading"><span class="eyebrow">HOW IT WORKS</span><button class="icon-button" data-close aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>这个分数，从哪里来？</h2><p>本工具用 MediaPipe 在所选设备上检测人脸关键点，再按固定规则生成一个 0–100 的娱乐分。它不是经过人类审美训练的颜值模型，也没有人群排名。</p><div class="method-rows"><div><strong>画面对称</strong><span>35%</span><p>左右五官关键点相对面部中线的差异。转头、表情、镜头畸变都会影响结果。</p></div><div><strong>五官比例</strong><span>25%</span><p>照片中眼、鼻、嘴的位置与预设几何模板的接近程度。模板是人为规则，不是“理想长相”。</p></div><div><strong>照片清晰</strong><span>20%</span><p>面部区域的图像边缘细节；清晰度受分辨率、纹理和锐化影响。</p></div><div><strong>光线表现</strong><span>20%</span><p>曝光、亮暗剪切与左右受光差异。肤色和场景也会影响这些像素指标。</p></div></div><p class="dialog-note">总分 = 各项分数 × 对应权重后相加。针对男生拍照场景设计，不会识别或核验性别，也不推断性格、健康或身份。同一照片的结果固定，换一张照片分数可能不同。</p><button class="primary-button" data-close>了解了</button></dialog>
+  <dialog id="privacyDialog"><div class="dialog-heading"><span class="eyebrow">PRIVATE BY DESIGN</span><button class="icon-button" data-close aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>你可以选择照片在哪里分析。</h2><p>“我的设备”模式是默认模式：人脸模型在你的浏览器中运行，照片不发送到网络。</p><p>“主机电脑”模式需要站点主人保持电脑和主机控制台在线。选择并同意此模式后，照片会通过 HTTPS 和 Cloudflare 隧道发送到站点主人的电脑；隧道服务会中转传输，主机程序只在内存中处理照片，不保存任务照片，返回结果后释放内存引用。主机程序若设置了访问码，需要在当前页面输入。主机离线时可以随时切回本机模式。</p><p>刷新页面或点击“移除照片”会清除当前页面中的照片与结果。主动点击“保存测评报告”时，会在你的设备上下载一份含照片的 PNG 文件。</p><p>建议使用自己的照片，或已获得本人许可的照片。示例图片的来源见程序中的 assets/README.md。</p><button class="primary-button" data-close>知道了</button></dialog>
   <noscript><div class="noscript">请启用 JavaScript 后使用本地人脸分析。</div></noscript>
 </body>
 </html>
+

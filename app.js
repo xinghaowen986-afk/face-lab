@@ -1,4 +1,5 @@
 import { initAnalyzer, analyzePhoto } from './analysis.js';
+import { requestHostAnalysis, resolveHostEndpoint, getHostHealth } from './remote.js';
 
 const $ = (id) => document.getElementById(id);
 const ui = Object.fromEntries(['fileInput','uploadTrigger','dropZone','previewWrap','photoPreview','landmarkCanvas','photoLabel','photoHint','replaceButton','clearButton','analyzeButton','analyzeButtonText','exampleButton','status','scanLine','resultPanel','reportBadge','scoreRing','totalScore','ringValue','resultTitle','resultSummary','dimensions','emptyInsight','insights','strengths','suggestions','downloadButton','deviceModeButton','hostModeButton','hostModeStatus','computeHint'].map(id => [id, $(id)]));
@@ -10,38 +11,62 @@ let revision = 0;
 let busy = false;
 let photoName = '';
 let computeMode = 'device';
+let resultMode = 'device';
+let hostState = null;
+let hostCheckPending = false;
+let analysisController = null;
 const maxBytes = 12 * 1024 * 1024;
 const nextPaint = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 const hostConfig = window.FACE_LAB_CONFIG || {};
-const hostEndpoint = String(hostConfig.hostEndpoint || '').trim();
-const hostPairingToken = String(hostConfig.hostPairingToken || '').trim();
-const hostAllowed = Boolean(hostEndpoint && hostPairingToken && (() => {
-  try {
-    const parsed = new URL(hostEndpoint, location.href);
-    return parsed.protocol === 'https:' || parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-  } catch { return false; }
-})());
+const hostEndpoint = resolveHostEndpoint(String(hostConfig.hostEndpoint || '').trim(), location.href);
+let hostAccessCode = '';
+const hostAllowed = Boolean(hostEndpoint);
 
 function setupComputeModes() {
   ui.hostModeButton.disabled = !hostAllowed;
-  ui.hostModeStatus.textContent = hostAllowed ? '已配置' : '未连接';
+  ui.hostModeStatus.textContent = hostAllowed ? '检查中' : '未配置';
   ui.hostModeButton.title = hostAllowed ? '使用已授权的主机电脑分析' : '需要先配置并启动主机服务';
-  ui.computeHint.innerHTML = hostAllowed
-    ? '<svg><use href="#i-lock"/></svg> 主机模式会通过 HTTPS 发送照片到已授权的主机电脑；可随时切回本机模式。'
-    : '<svg><use href="#i-lock"/></svg> 默认使用你的设备。主机模式需要主机电脑运行 HTTPS 服务并完成短期配对。';
+  ui.computeHint.textContent = '默认使用你的设备，照片不上传。主机模式会把照片通过 HTTPS 发送到站点主人的电脑。';
   for (const button of [ui.deviceModeButton, ui.hostModeButton]) button.addEventListener('click', () => {
-    if (button.disabled) return;
+    if (button.disabled || computeMode === button.dataset.mode) return;
+    revision++;
+    analysisController?.abort();
+    analysisController = null;
     computeMode = button.dataset.mode;
+    resetResults();
+    setBusy(false);
     ui.deviceModeButton.classList.toggle('active', computeMode === 'device');
     ui.hostModeButton.classList.toggle('active', computeMode === 'host');
     ui.deviceModeButton.setAttribute('aria-pressed', String(computeMode === 'device'));
     ui.hostModeButton.setAttribute('aria-pressed', String(computeMode === 'host'));
-    ui.analyzeButtonText.textContent = result ? '重新测评这张照片' : '开始颜值测评';
-    ui.computeHint.innerHTML = computeMode === 'host'
-      ? '<svg><use href="#i-lock"/></svg> 当前照片会离开此浏览器并发送到已授权的主机电脑；主机返回结果后应立即清除照片。'
-      : '<svg><use href="#i-lock"/></svg> 当前照片只在你的浏览器中分析，不会发送到网络。';
+    $('hostConsentArea').hidden = computeMode !== 'host';
+    $('processingLocation').textContent = computeMode === 'host' ? '照片将发送到主机电脑' : '照片仅在本机处理';
+    if (photo) ui.photoLabel.textContent = computeMode === 'host' ? '照片已选 · 分析时发送到主机' : '照片已选 · 仅在本机分析';
+    ui.computeHint.textContent = computeMode === 'host'
+      ? '照片将通过 HTTPS（Cloudflare 中转）发往站点主人的电脑，返回结果后释放。可随时切回“我的设备”。'
+      : '当前照片只在你的浏览器中分析，不会发送到网络。';
     status();
+    if (computeMode === 'host') void refreshHost();
   });
+  $('hostAccessCode').addEventListener('input', event => { hostAccessCode = event.target.value.trim(); });
+  $('refreshHostButton').addEventListener('click', () => { void refreshHost(); });
+  if (hostAllowed) {
+    void refreshHost();
+    setInterval(() => { if (document.visibilityState === 'visible') void refreshHost(); }, 30000);
+  }
+}
+
+async function refreshHost() {
+  if (!hostAllowed || hostCheckPending) return;
+  hostCheckPending = true;
+  try {
+    hostState = await getHostHealth(`${hostEndpoint}/api/analyze`, AbortSignal.timeout(8000));
+    ui.hostModeStatus.textContent = hostState.online ? (hostState.busy ? '处理中' : '在线') : '离线';
+    $('hostAccessCodeWrap').hidden = !hostState.accessCodeRequired;
+  } catch {
+    hostState = null;
+    ui.hostModeStatus.textContent = '连接不上';
+  } finally { hostCheckPending = false; }
 }
 
 function status(message = '', error = false) {
@@ -90,6 +115,8 @@ function clearLandmarks() {
 
 function removePhoto() {
   revision++;
+  analysisController?.abort();
+  analysisController = null;
   photo = null;
   photoBlob = null;
   photoName = '';
@@ -154,7 +181,7 @@ async function loadPhoto(blob, name, isExample = false) {
     ui.previewWrap.hidden = false;
     ui.uploadTrigger.hidden = true;
     ui.clearButton.hidden = false;
-    ui.photoLabel.textContent = isExample ? '示例照片 · 本地实测' : '你的照片 · 仅本机可见';
+    ui.photoLabel.textContent = `${isExample ? '示例照片' : '你的照片'} · ${computeMode === 'host' ? '分析时发送到主机' : '仅在本机分析'}`;
     ui.photoHint.textContent = `${original.naturalWidth} × ${original.naturalHeight} · 照片已就绪`;
     setBusy(false);
     status();
@@ -244,13 +271,20 @@ function drawLandmarks() {
 
 async function analyze() {
   if (!photo || busy) return;
+  const mode = computeMode;
+  if (mode === 'host' && !$('hostConsent').checked) { status('请先勾选同意将这张照片发送到站点主人的电脑。', true); return; }
+  if (mode === 'host' && hostState?.accessCodeRequired && !hostAccessCode) { status('请输入站点主人提供的访问码。', true); $('hostAccessCode').focus(); return; }
   const thisRevision = revision;
   const source = photo;
+  const sourceBlob = photoBlob;
+  const controller = new AbortController();
+  analysisController = controller;
+  const deadline = setTimeout(() => controller.abort(), 60000);
   resetResults();
   setBusy(true);
   ui.reportBadge.textContent = '正在分析';
   try {
-    if (computeMode === 'device') {
+    if (mode === 'device') {
       await initAnalyzer(message => { if (thisRevision === revision) status(message); });
       if (thisRevision !== revision) return;
       status('正在分析五官关键点、清晰度与光线…');
@@ -260,11 +294,12 @@ async function analyze() {
     await nextPaint();
     if (thisRevision !== revision) return;
     let value;
-    if (computeMode === 'host') value = await analyzeOnHost(photoBlob);
+    if (mode === 'host') value = await analyzeOnHost(sourceBlob, controller.signal);
     else value = await analyzePhoto(source);
     if (thisRevision !== revision) return;
+    resultMode = mode;
     showResult(value);
-    status(computeMode === 'host' ? '测评完成 · 主机已返回结果' : '测评完成 · 照片未离开你的设备');
+    status(mode === 'host' ? '测评完成 · 主机已返回结果' : '测评完成 · 照片未离开你的设备');
     if (matchMedia('(max-width: 820px)').matches) ui.resultPanel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
   } catch (error) {
     if (thisRevision === revision) {
@@ -272,35 +307,22 @@ async function analyze() {
       status(error.message || '分析失败，请更换清晰的单人正面照再试。', true);
     }
   } finally {
+    clearTimeout(deadline);
     if (thisRevision === revision) setBusy(false);
+    if (analysisController === controller) analysisController = null;
   }
 }
 
-async function analyzeOnHost(blob) {
+async function analyzeOnHost(blob, signal) {
   if (!hostAllowed) throw new Error('主机服务尚未配置，请切回“我的设备”模式。');
-  if (!(blob instanceof Blob)) throw new Error('照片尚未准备好，请重新选择图片。');
   status('正在通过 HTTPS 连接主机电脑…');
-  let response;
   try {
-    response = await fetch(hostEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'image/png', Authorization: `Bearer ${hostPairingToken}` },
-      body: blob,
-      mode: 'cors',
-      cache: 'no-store',
-    });
+    return await requestHostAnalysis(`${hostEndpoint}/api/analyze`, blob, hostAccessCode, signal);
   } catch (cause) {
+    if (cause.name === 'AbortError') throw new Error('请求已取消或超时，请重试或切回“我的设备”。');
+    if (cause instanceof Error && /主机/.test(cause.message)) throw cause;
     throw new Error('无法连接主机电脑。请确认主机在线，或切回“我的设备”模式。', { cause });
   }
-  if (!response.ok) {
-    if (response.status === 401 || response.status === 403) throw new Error('主机配对已失效，请重新配对后再试。');
-    if (response.status === 413) throw new Error('照片超过主机服务的大小限制，请换一张较小的照片。');
-    throw new Error(`主机服务暂时不可用（${response.status}），请切回“我的设备”模式。`);
-  }
-  let payload;
-  try { payload = await response.json(); } catch (cause) { throw new Error('主机返回的数据无法读取，请稍后重试。', { cause }); }
-  if (!payload || !Number.isFinite(payload.score) || !Array.isArray(payload.dimensions)) throw new Error('主机返回的测评格式不完整，请联系主机管理员。');
-  return payload;
 }
 
 function roundedRect(ctx, x, y, w, h, r, fill) {
@@ -321,6 +343,7 @@ async function downloadReport() {
   if (!result || !photo) return;
   const currentResult = result;
   const currentPhoto = photo;
+  const modeLabel = resultMode === 'host' ? '主机电脑分析' : '设备本地分析';
   const canvas = document.createElement('canvas');
   canvas.width = 1080; canvas.height = 1620;
   const ctx = canvas.getContext('2d');
@@ -339,7 +362,7 @@ async function downloadReport() {
   ctx.textAlign = 'center'; ctx.fillStyle = '#2f4224'; ctx.font = `bold 96px ${font}`; ctx.fillText(String(currentResult.score), 755, 383);
   ctx.fillStyle = '#97a386'; ctx.font = `18px ${font}`; ctx.fillText('颜值娱乐分 / 100', 755, 424);
   ctx.fillStyle = '#63774c'; ctx.font = `24px ${font}`; ctx.fillText('每一种风格，都有光。', 755, 552);
-  ctx.font = `16px ${font}`; ctx.fillStyle = '#9aa48f'; ctx.fillText('固定规则 · 本地分析 · 无人群排名', 755, 589); ctx.textAlign = 'left';
+  ctx.font = `16px ${font}`; ctx.fillStyle = '#9aa48f'; ctx.fillText(`固定规则 · ${modeLabel} · 无人群排名`, 755, 589); ctx.textAlign = 'left';
   roundedRect(ctx, 48, 705, 984, 380, 24, '#fff');
   ctx.fillStyle = '#34442b'; ctx.font = `bold 25px ${font}`; ctx.fillText('四个维度，认识你的画面', 80, 754);
   currentResult.dimensions.forEach((dimension, index) => {
@@ -357,7 +380,7 @@ async function downloadReport() {
   for (const tip of tips) { y = wrapText(ctx, `· ${tip}`, 80, y, 906, 33) + 13; }
   ctx.font = `17px ${font}`; ctx.fillStyle = '#8e9c7d';
   wrapText(ctx, '娱乐评分仅反映照片几何与拍摄质量，不代表客观颜值、个人价值或他人的审美。', 64, 1498, 952, 28);
-  ctx.font = `15px ${font}`; ctx.fillText(`生成于 ${new Date().toLocaleString('zh-CN')}  ·  照片仅在本机处理`, 64, 1578);
+  ctx.font = `15px ${font}`; ctx.fillText(`生成于 ${new Date().toLocaleString('zh-CN')}  ·  ${modeLabel}`, 64, 1578);
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   if (!blob) { status('报告生成失败，请重试。', true); return; }
   const url = URL.createObjectURL(blob);

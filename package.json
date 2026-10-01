@@ -6,7 +6,8 @@
   "description": "A local photo impression demo with bundled MediaPipe face landmarks.",
   "scripts": {
     "start": "node server.mjs",
-    "serve": "node server.mjs --no-open"
+    "serve": "node server.mjs --no-open",
+    "host": "node host-service.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -1,0 +1,14 @@
+{
+  "name": "face-lab-local",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A local photo impression demo with bundled MediaPipe face landmarks.",
+  "scripts": {
+    "start": "node server.mjs",
+    "serve": "node server.mjs --no-open"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

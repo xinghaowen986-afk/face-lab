@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7f8f2">
+  <title>面值 FACE VALUE · 男生颜值实验室</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23d3ed79'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='31'%3EFV%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3M7 12h10M9 8v.01M15 8v.01m-6 8c2 1.5 4 1.5 6 0"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.01"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6L12 3Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  </defs></svg>
+
+  <aside class="sidebar" aria-label="导航">
+    <a class="brand-mark" href="./" aria-label="面值首页">fv<span>✳</span></a>
+    <button class="nav-item active" id="homeNav" title="开始测评" aria-label="开始测评"><svg><use href="#i-scan"/></svg></button>
+    <button class="nav-item" data-open="methodDialog" title="评分说明" aria-label="评分说明"><svg><use href="#i-info"/></svg></button>
+    <div class="nav-spacer"></div>
+    <button class="nav-item" data-open="privacyDialog" title="隐私说明" aria-label="隐私说明"><svg><use href="#i-lock"/></svg></button>
+    <span class="side-version">V 1.0</span>
+  </aside>
+
+  <div class="page">
+    <header class="topbar">
+      <a href="./" class="wordmark">面值 <span>FACE VALUE</span></a>
+      <div class="topbar-right"><span class="local-pill"><span></span>照片仅在本机处理</span><button class="text-button" data-open="methodDialog">评分说明 <span>↗</span></button></div>
+    </header>
+    <main>
+      <section class="intro">
+        <div><p class="eyebrow"><span></span> 男生颜值实验室 <span class="eyebrow-divider">/</span> YOUR BEST ANGLE</p>
+        <h1>发现你的<span class="highlight">上镜优势<svg viewBox="0 0 300 15" preserveAspectRatio="none" aria-hidden="true"><path d="M3 10Q150 0 297 9"/></svg></span>。</h1>
+        <p class="intro-description">一张照片，看看你的镜头表现。认识优势，也找到简单的加分方式。</p></div>
+        <div class="intro-note"><span class="asterisk">✳</span><p>风格没有标准答案<br><strong>做自己，就很有型。</strong></p></div>
+      </section>
+
+      <div class="workspace">
+        <section class="panel upload-panel" aria-labelledby="uploadHeading">
+          <div class="panel-heading"><h2 id="uploadHeading"><span class="step-badge">01</span> 上传你的照片</h2><span class="small-label">正面 · 单人 · 自然光</span></div>
+          <fieldset class="compute-choice" aria-labelledby="computeHeading">
+            <legend id="computeHeading">选择算力</legend>
+            <div class="compute-options">
+              <button class="compute-option active" id="deviceModeButton" type="button" data-mode="device" aria-pressed="true">
+                <span class="compute-option-icon"><svg><use href="#i-scan"/></svg></span><span class="compute-option-copy"><strong>我的设备</strong><small>照片只在你的浏览器中分析</small></span><span class="compute-recommended">推荐</span>
+              </button>
+              <button class="compute-option host-option" id="hostModeButton" type="button" data-mode="host" aria-pressed="false" disabled title="需要先配置并启动主机服务">
+                <span class="compute-option-icon"><svg><use href="#i-spark"/></svg></span><span class="compute-option-copy"><strong>主机电脑</strong><small>发送到已授权的主机服务分析</small></span><span class="compute-status" id="hostModeStatus">未连接</span>
+              </button>
+            </div>
+            <p class="compute-hint" id="computeHint"><svg><use href="#i-lock"/></svg> 默认使用你的设备。主机模式需要主机电脑运行 HTTPS 服务并完成短期配对。</p>
+          </fieldset>
+          <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          <div class="photo-stage" id="dropZone">
+            <button class="empty-upload" id="uploadTrigger" type="button">
+              <span class="upload-illustration"><svg class="face-frame" viewBox="0 0 96 96" aria-hidden="true"><path d="M24 8H12a4 4 0 0 0-4 4v12m64-16h12a4 4 0 0 1 4 4v12M8 72v12a4 4 0 0 0 4 4h12m64-16v12a4 4 0 0 1-4 4H72"/><path class="face-outline" d="M28 44v-8a20 20 0 0 1 40 0v12c0 17-12 24-20 24S28 62 28 48Zm-6 42c5-8 12-12 26-12s21 4 26 12M36 41h4m16 0h4M40 58c4 4 12 4 16 0"/></svg><span class="upload-plus">+</span></span>
+              <strong>放一张照片，发现另一面的你</strong><span>拖拽照片到这里，或<span class="inline-link">点击选择</span></span>
+              <small>JPG、PNG、WebP · 最大 12 MB</small>
+            </button>
+            <div class="preview-wrap" id="previewWrap" hidden><img id="photoPreview" alt="待测评的人像照片"><canvas id="landmarkCanvas" aria-hidden="true"></canvas><div class="photo-gradient"></div><span class="photo-label" id="photoLabel">你的照片</span><button class="replace-button" id="replaceButton"><svg><use href="#i-upload"/></svg>更换照片</button><div class="scan-line" id="scanLine" hidden></div></div>
+            <div class="drop-overlay" aria-hidden="true"><svg><use href="#i-upload"/></svg>松开，放入照片</div>
+          </div>
+          <div class="photo-tools"><span id="photoHint"><svg><use href="#i-check"/></svg> 清晰露出五官，效果更好</span><button id="clearButton" class="text-button muted" hidden>移除照片</button></div>
+          <button class="primary-button" id="analyzeButton" disabled><svg><use href="#i-scan"/></svg><span id="analyzeButtonText">开始颜值测评</span><svg class="button-arrow"><use href="#i-arrow"/></svg></button>
+          <p class="status-message" id="status" role="status" aria-live="polite"></p>
+          <div class="example-row"><img src="./assets/example.jpg" alt="示例人像缩略图"><div><strong>先看看它怎么玩</strong><p>用示例照片，体验完整测评</p></div><button class="example-button" id="exampleButton">试一试 <span>↗</span></button></div>
+        </section>
+
+        <section class="panel result-panel" id="resultPanel" aria-labelledby="reportHeading" aria-busy="false">
+          <div class="panel-heading"><h2 id="reportHeading"><span class="step-badge">02</span> 你的颜值档案</h2><span class="report-pill" id="reportBadge">等待解锁</span></div>
+          <div class="score-overview"><div class="score-ring" id="scoreRing"><svg viewBox="0 0 180 180" aria-hidden="true"><circle class="ring-track" cx="90" cy="90" r="78"/><circle class="ring-value" id="ringValue" cx="90" cy="90" r="78"/></svg><div><span id="totalScore">—</span><small>颜值娱乐分 / 100</small></div><span class="score-spark" aria-hidden="true">✳</span></div><h3 id="resultTitle">你的风格，值得被看见</h3><p id="resultSummary">上传照片，生成属于你的镜头表现档案。</p></div>
+          <div class="dimensions" id="dimensions">
+            <div class="dimension"><div><span><i class="dim-dot symmetry"></i>画面对称</span><strong>— <small>/ 100</small></strong></div><div class="progress-track"><span></span></div></div>
+            <div class="dimension"><div><span><i class="dim-dot proportion"></i>五官比例</span><strong>— <small>/ 100</small></strong></div><div class="progress-track"><span></span></div></div>
+            <div class="dimension"><div><span><i class="dim-dot sharpness"></i>照片清晰</span><strong>— <small>/ 100</small></strong></div><div class="progress-track"><span></span></div></div>
+            <div class="dimension"><div><span><i class="dim-dot lighting"></i>光线表现</span><strong>— <small>/ 100</small></strong></div><div class="progress-track"><span></span></div></div>
+          </div>
+          <div class="empty-insight" id="emptyInsight"><svg><use href="#i-spark"/></svg><p>不止一个分数<br><span>还有你的画面亮点与上镜建议</span></p></div>
+          <div id="insights" class="insights" hidden><div class="insight-label"><svg><use href="#i-spark"/></svg> 你的画面亮点</div><div id="strengths" class="strength-tags"></div><div class="insight-label tips-label">试试这些小调整</div><ul id="suggestions"></ul></div>
+          <button class="download-button" id="downloadButton" hidden><svg><use href="#i-download"/></svg>保存测评报告 <span>PNG</span></button>
+          <p class="score-note"><svg><use href="#i-info"/></svg><span>固定规则的娱乐评分，反映照片几何与拍摄质量，<br>不代表客观颜值或个人价值。<button data-open="methodDialog">了解依据</button></span></p>
+        </section>
+      </div>
+
+      <section class="benefits" aria-label="产品特点"><div><span class="benefit-icon"><svg><use href="#i-lock"/></svg></span><p><strong>照片留在你的设备</strong><span>本地分析，刷新后即清除</span></p></div><div><span class="benefit-icon"><svg><use href="#i-scan"/></svg></span><p><strong>多个维度，认识优势</strong><span>从画面到五官，了解上镜表现</span></p></div><div><span class="benefit-icon"><svg><use href="#i-spark"/></svg></span><p><strong>让改变简单一点</strong><span>实用拍照建议，找到你的角度</span></p></div></section>
+      <footer><span>面值 FACE VALUE <span class="footer-dot">·</span> 每一种风格，都有光。</span><button class="text-button" data-open="privacyDialog">隐私说明 <span>↗</span></button></footer>
+    </main>
+  </div>
+
+  <dialog id="methodDialog"><div class="dialog-heading"><span class="eyebrow">HOW IT WORKS</span><button class="icon-button" data-close aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>这个分数，从哪里来？</h2><p>本工具用 MediaPipe 在本机检测人脸关键点，再按固定规则生成一个 0–100 的娱乐分。它不是经过人类审美训练的颜值模型，也没有人群排名。</p><div class="method-rows"><div><strong>画面对称</strong><span>35%</span><p>左右五官关键点相对面部中线的差异。转头、表情、镜头畸变都会影响结果。</p></div><div><strong>五官比例</strong><span>25%</span><p>照片中眼、鼻、嘴的位置与预设几何模板的接近程度。模板是人为规则，不是“理想长相”。</p></div><div><strong>照片清晰</strong><span>20%</span><p>面部区域的图像边缘细节；清晰度受分辨率、纹理和锐化影响。</p></div><div><strong>光线表现</strong><span>20%</span><p>曝光、亮暗剪切与左右受光差异。肤色和场景也会影响这些像素指标。</p></div></div><p class="dialog-note">总分 = 各项分数 × 对应权重后相加。针对男生拍照场景设计，不会识别或核验性别，也不推断性格、健康或身份。同一照片的结果固定，换一张照片分数可能不同。</p><button class="primary-button" data-close>了解了</button></dialog>
+  <dialog id="privacyDialog"><div class="dialog-heading"><span class="eyebrow">PRIVATE BY DESIGN</span><button class="icon-button" data-close aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>你可以选择照片在哪里分析。</h2><p>“我的设备”模式是默认模式：人脸模型在你的浏览器中运行，照片不发送到网络。</p><p>“主机电脑”模式只有在主机服务配置并完成短期配对后才会启用。选择它会把照片通过 HTTPS 发送到已授权的主机电脑；主机服务应只在内存中处理并在返回结果后清除照片。主机离线时可以随时切回本机模式。</p><p>刷新页面或点击“移除照片”会清除当前页面中的照片与结果。主动点击“保存测评报告”时，会在你的设备上下载一份含照片的 PNG 文件。</p><p>建议使用自己的照片，或已获得本人许可的照片。示例图片的来源见程序中的 assets/README.md。</p><button class="primary-button" data-close>知道了</button></dialog>
+  <noscript><div class="noscript">请启用 JavaScript 后使用本地人脸分析。</div></noscript>
+</body>
+</html>
